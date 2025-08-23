@@ -23,7 +23,12 @@ def get_market_data(ticker_symbol):
 def validate_ticker(ticker_symbol):
     """Validates if the given ticker symbol exists."""
     ticker = yf.Ticker(ticker_symbol) 
-    return(ticker.info['trailingPegRatio'] is not None)  # Debugging line to check ticker info
+    info = ticker.info
+    if info.get('regularMarketPrice') is not None:
+        return True
+    if not ticker.history(period="1d").empty:
+        return True
+    return False
 
 def get_historical_volatility(ticker_symbol, period="1y"):
     """Calculates the annualized historical volatility of a stock."""
