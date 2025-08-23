@@ -20,9 +20,17 @@ def get_market_data(ticker_symbol):
 
     return stock_price, dividend_yield, risk_free_rate
 
+def validate_ticker(ticker_symbol):
+    """Validates if the given ticker symbol exists."""
+    ticker = yf.Ticker(ticker_symbol) 
+    return(ticker.info['trailingPegRatio'] is not None)  # Debugging line to check ticker info
+
 def get_historical_volatility(ticker_symbol, period="1y"):
     """Calculates the annualized historical volatility of a stock."""
-    ticker = yf.Ticker(ticker_symbol)
+    try:
+        ticker = yf.Ticker(ticker_symbol)
+    except Exception as e:
+        print(f"Error fetching ticker data: {e}")
     hist = ticker.history(period=period)
     log_returns = np.log(hist['Close'] / hist['Close'].shift(1))
     # Annualize the standard deviation of log returns

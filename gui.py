@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from main import call_option_price, put_option_price, get_market_data, get_historical_volatility
+from main import validate_ticker, call_option_price, put_option_price, get_market_data, get_historical_volatility
 
 def calculate_price():
     """
@@ -11,11 +11,18 @@ def calculate_price():
         # Get user inputs from the GUI
         ticker = ticker_entry.get().upper()
         if not ticker:
-            raise ValueError("Ticker symbol cannot be empty.")
+            raise ValueError("Ticker symbol cannot be empty or invalid.")
+        elif not validate_ticker(ticker):
+            raise ValueError(f"Ticker symbol '{ticker}' is invalid or does not exist.")
+        
+        if (not strike_price_entry.get() or not time_to_expiry_entry.get()):
+            raise ValueError("Strike price and time to expiry must be provided.")
         
         strike_price = float(strike_price_entry.get())
         time_to_expiry = float(time_to_expiry_entry.get())
-        option_type = option_type_var.get()
+
+        if (strike_price <= 0 or time_to_expiry <= 0):
+            raise ValueError("Strike price and time to expiry must be positive numbers.")
 
         # Fetch market data using functions from main.py
         result_label.config(text="Fetching data...")
@@ -24,15 +31,15 @@ def calculate_price():
         stock_price, dividend_yield, risk_free_rate = get_market_data(ticker)
         volatility = get_historical_volatility(ticker)
 
-        # Calculate the option price
-        if option_type == 'Call':
-            price = call_option_price(stock_price, strike_price, time_to_expiry, risk_free_rate, volatility, dividend_yield)
-        else: # Put
-            price = put_option_price(stock_price, strike_price, time_to_expiry, risk_free_rate, volatility, dividend_yield)
-        
+        # Calculate the option prices
+        call_price = call_option_price(stock_price, strike_price, time_to_expiry, risk_free_rate, volatility, dividend_yield)
+    
+        put_price = put_option_price(stock_price, strike_price, time_to_expiry, risk_free_rate, volatility, dividend_yield)
+    
         # Display the result
         result_text = (
-            f"{option_type} Option Price: {price:.2f}\n\n"
+            f"Call Option Price: {call_price:.2f}\n\n"
+            f"Put Option Price: {put_price:.2f}\n\n"
             f"Fetched Data:\n"
             f"  Stock Price: {stock_price:.2f}\n"
             f"  Volatility: {volatility*100:.2f}%\n"
@@ -42,10 +49,10 @@ def calculate_price():
         result_label.config(text=result_text)
 
     except ValueError as e:
-        messagebox.showerror("Input Error", f"Please enter valid inputs.\n{e}")
+        messagebox.showerror("Failed", e)
         result_label.config(text="Option Price: -")
     except Exception as e:
-        messagebox.showerror("Error", f"An error occurred: {e}")
+        messagebox.showerror("Error", f"An unexpected error occurred: {e}")
         result_label.config(text="Option Price: -")
 
 # --- GUI Setup ---
@@ -69,14 +76,6 @@ strike_price_entry.grid(column=1, row=1, sticky=(tk.W, tk.E), pady=2)
 ttk.Label(frame, text="Time to Expiry (years):").grid(column=0, row=2, sticky=tk.W, pady=2)
 time_to_expiry_entry = ttk.Entry(frame)
 time_to_expiry_entry.grid(column=1, row=2, sticky=(tk.W, tk.E), pady=2)
-
-# --- Option Type Selection ---
-ttk.Label(frame, text="Option Type:").grid(column=0, row=3, sticky=tk.W, pady=2)
-option_type_var = tk.StringVar(value='Call')
-call_radio = ttk.Radiobutton(frame, text='Call', variable=option_type_var, value='Call')
-put_radio = ttk.Radiobutton(frame, text='Put', variable=option_type_var, value='Put')
-call_radio.grid(column=1, row=3, sticky=tk.W)
-put_radio.grid(column=1, row=3, sticky=tk.E)
 
 
 # --- Buttons and Result ---
