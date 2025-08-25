@@ -19,7 +19,8 @@ def calculate_price():
             raise ValueError("Strike price and time to expiry must be provided.")
         
         strike_price = float(strike_price_entry.get())
-        time_to_expiry = float(time_to_expiry_entry.get())
+        time_to_expiry_days = float(time_to_expiry_entry.get())
+        time_to_expiry = time_to_expiry_days / 365.0
 
         if (strike_price <= 0 or time_to_expiry <= 0):
             raise ValueError("Strike price and time to expiry must be positive numbers.")
@@ -73,7 +74,7 @@ ttk.Label(frame, text="Strike Price:").grid(column=0, row=1, sticky=tk.W, pady=2
 strike_price_entry = ttk.Entry(frame)
 strike_price_entry.grid(column=1, row=1, sticky=(tk.W, tk.E), pady=2)
 
-ttk.Label(frame, text="Time to Expiry (years):").grid(column=0, row=2, sticky=tk.W, pady=2)
+ttk.Label(frame, text="Time to Expiry (days):").grid(column=0, row=2, sticky=tk.W, pady=2)
 time_to_expiry_entry = ttk.Entry(frame)
 time_to_expiry_entry.grid(column=1, row=2, sticky=(tk.W, tk.E), pady=2)
 
